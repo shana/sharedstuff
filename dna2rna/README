@@ -1,0 +1,12 @@
+O dna2rna é a mesma coisa do que tinhamos em C, mas com strings de C++. Assim não temos que alocar memória para os dados, as string, listas e vectores crescem automaticamente. Corta-se tb um bocado nos asteriscos e afins. Podes concatenar strings e caracteres com += 
+
+A compilação é a mesma coisa, mas em vez de gcc, chama o g++.
+
+Quando gero as substuições ?s , estou a meter um ? extra no fim para podermos saber qual o tamanho de s.
+Há por aí algum bug, porque o templat gera uma string PI0?0? para o primeiro exemplo da página 11, que não está bem (de certeza que devia ter numeros > 0 aí, assim não faz nada :p)
+
+No debug, com as strings, ele é capaz de te saltar para funções internas do c, dá jeito meter breakpoints directamente nas funções em vez de fazer step para entrar.
+
+Devia estar a gravar o rna final no ficheiro, mas estou a gravar o dna pq o rna nunca está a ser preenchido (há praí algum bug, tem que se ver as regras, se calhar pegar num dos exemplos da página 11 e escrever mesmo todos os passinhos e comparar... :/
+
+E vou dormir :p
