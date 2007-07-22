@@ -38,6 +38,9 @@ const int III = 10;
 
 
 ofstream logfile;
+int rnacommands;
+
+
 
 int doswitch(string::iterator dna)
 {
@@ -159,6 +162,7 @@ string pattern(string strDna, string::iterator eof, string::iterator &dna, int &
 				rna += strDna.substr (dnaPos, 7);
                 dna += 7;
 				dnaPos += 7;
+				rnacommands++;
                 break;
             }
             default:
@@ -342,6 +346,7 @@ string templat(string::iterator eof, string::iterator &dna, int &dnaPos, string 
                 rna.append (dna, dna+7);
                 dna += 7;
 				dnaPos += 7;
+				rnacommands++;
                 break;
 			}
             
@@ -585,8 +590,10 @@ void execute (string dna)
     string::iterator dnaEnd = dna.end();
     bool done = false;
 	int dnaPos = 0;
+	int iterations = 0;
     while (dnaCurrent != dnaEnd)
     {
+		cout << "iteration " << iterations++ << endl;
 		logfile << endl;
 		logfile << "dna = " << dna.substr(dnaPos, 10) << "... (" << dna.size() << ")" << endl;
         string p = pattern(dna, dnaEnd, dnaCurrent, dnaPos, rna, done);
@@ -603,7 +610,9 @@ void execute (string dna)
 
 		logfile << "len(rna) = " << rna.length() << endl;
 		
-}
+	}
+
+	cout << "rna commands:" << rnacommands << endl;
 
     ofstream fout("endo.rna");
     fout << rna;
@@ -629,28 +638,46 @@ int main(int argc, char **argv)
 	string endoFile;
 	prefixFile = "prefix.dna";
 	endoFile = "endo.dna";
+	bool loadfile = false;
 
 	if (argc == 2)
 	{
 		prefixFile = argv[1];
 		endoFile = "";
+		loadfile = true;
 	}
 	else if (argc == 3)
 	{
 		prefixFile = argv[1];
 		endoFile = argv[2];
+		loadfile = true;
+	}
+	else if (argc == 4)
+	{
+		string dna2;
+		cin >> dna;
+		cin >> dna2;
+		dna.append (dna2);
+		cout << dna << endl;
 	}
 
-
-	ifstream fin(prefixFile.c_str ());  
-    fin >> dna;
-    fin.close();
-
-	if (endoFile.length() > 0)
+	if (loadfile)
 	{
-		ifstream fin1(endoFile.c_str ());
-		fin1 >> dna;
-		fin1.close();
+		ifstream fin(prefixFile.c_str ());  
+		fin >> dna;
+		fin.close();
+
+		cout << dna.length() << endl;
+		if (endoFile.length() > 0)
+		{
+			string dna2;
+			ifstream fin1(endoFile.c_str ());
+			fin1 >> dna2;
+			fin1.close();
+			dna.append (dna2);
+			cout << dna.length() << endl;
+		}
+
 	}
 
 	//vector<string::size_type> a;
