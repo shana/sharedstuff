@@ -443,7 +443,7 @@ void matchreplace(string &strDna, string::iterator &eof, string::iterator &dna, 
 			
             string::size_type pos = strDna.find (str, i);
             if (pos != string::npos)
-                i = pos;
+				i = pos + str.length ();
             else
 			{
                 return;
