@@ -3,22 +3,23 @@
 #include <sstream>
 #include <fstream>
 #include <list>
+#include <stack>
 #include <vector>
 using namespace std;
 
 //declaracoes
-void execute();
-string pattern(string::iterator eof, string::iterator &dna, string rna, bool &done);
-string templat(string::iterator eof, string::iterator &dna, string rna, bool &done);
-void matchreplace(string strDna, string::iterator eof, string::iterator &dna, 
-                    string p, string t, bool &done);
+void execute(string dna);
+string pattern(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done);
+string templat(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done);
+void matchreplace(string &strDna, string::iterator &eof, string::iterator &dna, int &dnaPos, 
+                    string &p, string &t, bool &done);
 
-int nat(string::iterator eof, string::iterator &dna);
-void consts(string::iterator eof, string::iterator &dna, string p);
+int nat(string::iterator eof, string::iterator &dna, int &dnaPos);
+void consts(string::iterator eof, string::iterator &dna, int &dnaPos, string &p);
 int doswitch(string::iterator dna);
 
 
-void replace (string::iterator &dna, string tpl, vector<string> e);
+string replace (string::iterator &dna, string &tpl, vector<string> e);
 string protect (int count, string str);
 string quote (string str);
 string asnat (int len);
@@ -35,6 +36,8 @@ const int IIC = 8;
 const int IIF = 9;
 const int III = 10;
 
+
+ofstream logfile;
 
 int doswitch(string::iterator dna)
 {
@@ -61,7 +64,7 @@ int doswitch(string::iterator dna)
     return 0;
 }
 
-string pattern(string::iterator eof, string::iterator &dna, string rna, bool &done)
+string pattern(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done)
 {
     string p;
     int lvl = 0;
@@ -74,32 +77,37 @@ string pattern(string::iterator eof, string::iterator &dna, string rna, bool &do
             case C: 
             {
                 dna++;
+				dnaPos++;
                 p += 'I';
                 break;
             }
             case F:
             {
                 dna++;
+				dnaPos++;
                 p += 'C';
                 break;
             }
             case P:
             {
                 dna++;
+				dnaPos++;
                 p += 'F';
                 break;
             }
             case IC:
             {
                 dna += 2;
+				dnaPos += 2;
                 p += 'P';
                 break;
             }
             case IP:
             {
                 dna += 2;
+				dnaPos += 2;
                 p += '!';
-                int n = nat(eof, dna);
+                int n = nat(eof, dna, dnaPos);
                 if (n < 0)
                 {
                     done = true;
@@ -114,14 +122,16 @@ string pattern(string::iterator eof, string::iterator &dna, string rna, bool &do
             case IF:
             {
                 dna += 3;
+				dnaPos += 3;
                 p += '?';
-                consts(eof, dna, p);
+                consts(eof, dna, dnaPos, p);
                 p += '?';
                 break;
             }
             case IIP:
             {
                 dna += 3;
+				dnaPos += 3;
                 lvl++;
                 p += '(';
                 break;
@@ -130,6 +140,7 @@ string pattern(string::iterator eof, string::iterator &dna, string rna, bool &do
             case IIF:
             {
                 dna += 3;
+				dnaPos += 3;
                 if(lvl == 0)
                 {
                     return p;
@@ -144,8 +155,10 @@ string pattern(string::iterator eof, string::iterator &dna, string rna, bool &do
             case III:
             {
                 dna += 3;
+				dnaPos += 3;
                 rna.append (dna, dna+7);
                 dna += 7;
+				dnaPos += 7;
                 break;
             }
             default:
@@ -154,12 +167,12 @@ string pattern(string::iterator eof, string::iterator &dna, string rna, bool &do
                 break;
         }
         
-        cout << p;
     }
+    return p;
 }
 
 
-int nat(string::iterator eof, string::iterator &dna)
+int nat(string::iterator eof, string::iterator &dna, int &dnaPos)
 {
     if (dna == eof)
         return -1;
@@ -167,18 +180,21 @@ int nat(string::iterator eof, string::iterator &dna)
     if(*dna == 'P')
     {
         dna++;
+		dnaPos++;
         return 0;
     }
     else if( (*dna == 'I') || (*dna == 'F') )
     {
         dna++;
-        int n = nat(eof, dna);
+		dnaPos++;
+        int n = nat(eof, dna, dnaPos);
         return 2*n;
     }
     else if (*dna == 'C')
     {
         dna++;
-        int n = nat(eof, dna);
+        dnaPos++;
+		int n = nat(eof, dna, dnaPos);
         return 2*n+1;
     }
     else
@@ -187,35 +203,39 @@ int nat(string::iterator eof, string::iterator &dna)
     }
 }
 
-void consts(string::iterator eof, string::iterator &dna, string p)
+void consts(string::iterator eof, string::iterator &dna, int &dnaPos, string &p)
 {
-    while (dna == eof)
+    while (dna != eof)
     {
         int ret = doswitch(dna);
         switch (ret)
         {
             case C:
             {
-                p += 'I';
+				p.append ("I");
                 dna++;
+				dnaPos++;
                 break;
             }
             case F:
             {
-                p += 'C';
+				p.append ("C");
                 dna++;
+				dnaPos++;
                 break;
             }
             case P:
             {
-                p += 'F';
+				p.append ("F");
                 dna++;
+				dnaPos++;
                 break;
             }
             case IC:
             {
-                p += 'P';
+				p.append ("P");
                 dna += 2;
+				dnaPos += 2;
                 break;
             }
             default:
@@ -225,7 +245,7 @@ void consts(string::iterator eof, string::iterator &dna, string p)
     }
 }
 
-string templat(string::iterator eof, string::iterator &dna, string rna, bool &done)
+string templat(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done)
 {
     string t;
     
@@ -238,24 +258,28 @@ string templat(string::iterator eof, string::iterator &dna, string rna, bool &do
             case C:
 			{
                 dna++;
+				dnaPos++;
                 t += 'I';
                 break;
 			}
             case F:
 			{
                 dna++;
+				dnaPos++;
                 t += 'C';
                 break;
 			}
             case P:
 			{
                 dna++;
+				dnaPos++;
                 t += 'F';
                 break;
 			}
             case IC:
 			{
                 dna += 2;
+				dnaPos += 2;
                 t += 'P';
                 break;
 			}
@@ -263,13 +287,14 @@ string templat(string::iterator eof, string::iterator &dna, string rna, bool &do
             case IP:
 			{
                 dna += 2;
-                l = nat(eof, dna);
+				dnaPos += 2;
+                l = nat(eof, dna, dnaPos);
                 if (l < 0)
                 {
                     done = true;
                     return t;
                 }               
-                n = nat(eof, dna);
+                n = nat(eof, dna, dnaPos);
                 if (n < 0)
                 {
                     done = true;
@@ -289,13 +314,15 @@ string templat(string::iterator eof, string::iterator &dna, string rna, bool &do
             case IIF:
 			{
                 dna += 3;
+				dnaPos += 3;
                 return t;
                 break;
 			}
             case IIP:
 			{
                 dna += 3;
-                n = nat(eof, dna);
+				dnaPos += 3;
+                n = nat(eof, dna, dnaPos);
                 if (n < 0)
                 {
                     done = true;
@@ -311,8 +338,10 @@ string templat(string::iterator eof, string::iterator &dna, string rna, bool &do
             case III:
 			{
                 dna += 3;
+				dnaPos += 3;
                 rna.append (dna, dna+7);
                 dna += 7;
+				dnaPos += 7;
                 break;
 			}
             
@@ -349,27 +378,38 @@ bool isReplaceOp (string::iterator p)
             *p == '|');
 }
 
-void matchreplace(string strDna, string::iterator eof, string::iterator &dna, 
-                    string pat, string t, 
+void matchreplace(string &strDna, string::iterator &eof, string::iterator &dna, int &dnaPos, 
+                    string &pat, string &t, 
                     bool &done)
 {
     int i = 0;
     int n;
-    list <int> c;
+    stack <int> c;
     vector<string> e;
-    int currentDnaPos = distance (strDna.begin(), dna);
     
-    for (string::iterator p = pat.begin(); p != pat.end(); p++)
+	int len = strlen(strDna.c_str());
+	strDna = strDna.erase (0, dnaPos);
+	strDna.resize (len-dnaPos);
+	len = strlen(strDna.c_str());
+	dna = strDna.begin ();
+	eof = strDna.end();
+	dnaPos = 0;
+
+	for (string::iterator p = pat.begin(); p != pat.end(); p++)
     {
         if (*p == 'I' || 
             *p == 'C' || 
             *p == 'F' || 
             *p == 'P')
         {
-            if (*(dna + i) == *p)
+			char c = *(dna + i);
+			char c2 = *p;
+            if (c == c2)
                 i++;
             else
+			{
                 return;
+			}
         }
         else if (*p == '!')
         {
@@ -380,12 +420,16 @@ void matchreplace(string strDna, string::iterator eof, string::iterator &dna,
                 str += *p;
                 p++;
             }
+			
             istringstream iss(str);
             iss >> n;
             i += n;
 
-            if (i > distance (p, eof))
+            if (p + i >= eof)
+			{
                 return;
+			}
+			p--;
         }
         else if (*p == '?')
         {
@@ -396,31 +440,46 @@ void matchreplace(string strDna, string::iterator eof, string::iterator &dna,
                 str += *p;
                 p++;
             }
-            string::size_type pos = strDna.find (str, currentDnaPos + i);
+			
+            string::size_type pos = strDna.find (str, i);
             if (pos != string::npos)
                 i = pos;
             else
+			{
                 return;
-            
+			}
         }
         else if (*p == '(')
         {
-            c.push_front (i);
+            c.push (i);
         }
         else if (*p == ')')
         {
             
-            int open = c.front();
-            c.pop_front ();
-            e.push_back (strDna.substr (currentDnaPos + open, currentDnaPos + i));
+            int open = c.top();
+            c.pop ();
+			if (strDna.length () < open || strDna.length () < i)
+			{
+				cout << "invalid string position" << endl;
+				return;
+			}
+			string str = strDna.substr (open, i - open);
+			logfile << str.substr (0, 10) << "... (" << str.length() << ")" << endl;
+            e.push_back (str);
         }
     }
-    
-	dna += i;
-    replace (dna, t, e);
+
+	strDna = strDna.erase (0, i);
+	strDna.resize (len-i);
+	dna = strDna.begin ();
+    string r = replace (dna, t, e);
+	strDna.insert (0, r);
+	dna = strDna.begin ();
+	eof = strDna.end();
+	dnaPos = 0;
 }
 
-void replace (string::iterator &dna, string tpl, vector<string> e)
+string replace (string::iterator &dna, string &tpl, vector<string> e)
 {
     string r;
     for (string::iterator t = tpl.begin(); t != tpl.end(); t++)
@@ -440,8 +499,7 @@ void replace (string::iterator &dna, string tpl, vector<string> e)
                 str += *t;
                 t++;
             }
-
-            
+           
             istringstream iss(str);
             int n = 0;
             iss >> n;
@@ -475,8 +533,10 @@ void replace (string::iterator &dna, string tpl, vector<string> e)
             iss >> len;
 			if (e.size () > len)
 	            r += asnat(e[len].length());
-        }
-    }    
+		}
+    }
+
+	return r;
 }
 
 
@@ -515,44 +575,103 @@ string asnat (int len)
 }
 
 
-void execute ()
+void execute (string dna)
 {
-    ifstream fin("endo.dna");
-    string dna;
-    fin >> dna;
-    fin.close();
 
-    string rna;
+	string rna;
     
     string::iterator dnaCurrent = dna.begin();
     string::iterator dnaEnd = dna.end();
     bool done = false;
+	int dnaPos = 0;
     while (dnaCurrent != dnaEnd)
     {
-        cout << "start pattern" << endl;
-        string p = pattern(dnaEnd, dnaCurrent, rna, done);
-        cout << "end pattern" << endl;
+		logfile << endl;
+		logfile << "dna = " << dna.substr(dnaPos, 10) << "... (" << dna.size() << ")" << endl;
+        string p = pattern(dnaEnd, dnaCurrent, dnaPos, rna, done);
         if (done)
             break;
+		
+		logfile << "pattern = " << p << endl;
 
-        cout << "start templat" << endl;
-        string t = templat (dnaEnd, dnaCurrent, rna, done);
-        cout << "end templat" << endl;
+        string t = templat (dnaEnd, dnaCurrent, dnaPos, rna, done);
 
-        cout << "start matchreplace" << endl;
-        matchreplace (dna, dnaEnd, dnaCurrent, p, t, done);
-        cout << "end matchreplace" << endl;
-    }
+		logfile << "template = " << t << endl;
+
+		matchreplace (dna, dnaEnd, dnaCurrent, dnaPos, p, t, done);
+
+		logfile << "len(rna) = " << rna.length() << endl;
+		
+}
 
     ofstream fout("endo.rna");
-    fout << dna;
+    fout << rna;
     fout.close();
+
+	if (dnaCurrent != dnaEnd)
+	{
+		ofstream fout2("rest.dna");
+		fout2 << dna.substr (distance(dna.begin (), dnaCurrent));
+		fout2.close();
+	}
+	//string str;
+	//cin >> str;
 }
 
 
-int main(void)
+int main(int argc, char **argv)
 {
-    execute();
+	string prefix;
+	string dna;
 
-    return 0;
+	string prefixFile;
+	string endoFile;
+	prefixFile = "prefix.dna";
+	endoFile = "endo.dna";
+
+	if (argc == 2)
+	{
+		prefixFile = argv[1];
+		endoFile = "";
+	}
+	else if (argc == 3)
+	{
+		prefixFile = argv[1];
+		endoFile = argv[2];
+	}
+
+
+	ifstream fin(prefixFile.c_str ());  
+    fin >> dna;
+    fin.close();
+
+	if (endoFile.length() > 0)
+	{
+		ifstream fin1(endoFile.c_str ());
+		fin1 >> dna;
+		fin1.close();
+	}
+
+	//vector<string::size_type> a;
+	//string str;
+	//string f = "IIICCCCPIC";
+	//string::size_type pos = dna.find (f, 0);
+	//while (pos != string::npos)
+	//{
+
+	//	a.push_back (pos);		
+	//	pos = dna.find (f, pos+1);
+	//}
+
+	//for (int i = 0; i < a.size(); i++)
+	//{
+	//	cout << a[i] << endl;
+	//}
+
+	logfile.open ("log");
+
+	execute(dna);
+
+	logfile.close();
+	return 0;
 }
