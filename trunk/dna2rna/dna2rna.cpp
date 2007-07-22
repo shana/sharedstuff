@@ -9,7 +9,7 @@ using namespace std;
 
 //declaracoes
 void execute(string dna);
-string pattern(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done);
+string pattern(string strDna, string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done);
 string templat(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done);
 void matchreplace(string &strDna, string::iterator &eof, string::iterator &dna, int &dnaPos, 
                     string &p, string &t, bool &done);
@@ -64,7 +64,7 @@ int doswitch(string::iterator dna)
     return 0;
 }
 
-string pattern(string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done)
+string pattern(string strDna, string::iterator eof, string::iterator &dna, int &dnaPos, string &rna, bool &done)
 {
     string p;
     int lvl = 0;
@@ -156,7 +156,7 @@ string pattern(string::iterator eof, string::iterator &dna, int &dnaPos, string 
             {
                 dna += 3;
 				dnaPos += 3;
-                rna.append (dna, dna+7);
+				rna += strDna.substr (dnaPos, 7);
                 dna += 7;
 				dnaPos += 7;
                 break;
@@ -489,7 +489,8 @@ string replace (string::iterator &dna, string &tpl, vector<string> e)
             *t == 'F' ||
             *t == 'P')
         {
-            r += *t;
+			char c = *t;
+            r += c;
         }
         else if (isdigit(*t))
         {
@@ -588,7 +589,7 @@ void execute (string dna)
     {
 		logfile << endl;
 		logfile << "dna = " << dna.substr(dnaPos, 10) << "... (" << dna.size() << ")" << endl;
-        string p = pattern(dnaEnd, dnaCurrent, dnaPos, rna, done);
+        string p = pattern(dna, dnaEnd, dnaCurrent, dnaPos, rna, done);
         if (done)
             break;
 		
