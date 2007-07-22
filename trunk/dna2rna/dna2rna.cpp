@@ -395,7 +395,7 @@ void matchreplace(string &strDna, string::iterator &eof, string::iterator &dna, 
 	eof = strDna.end();
 	dnaPos = 0;
 
-	for (string::iterator p = pat.begin(); p != pat.end(); p++)
+	for (string::iterator p = pat.begin(); p < pat.end(); p++)
     {
         if (*p == 'I' || 
             *p == 'C' || 
